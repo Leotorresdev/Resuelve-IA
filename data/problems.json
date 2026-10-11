@@ -1,0 +1,49 @@
+[
+  {
+    "id": "prob_1791739265141_olvrw",
+    "createdAt": "2026-10-11T17:21:05.142Z",
+    "status": "nuevo",
+    "persona": "comercio",
+    "rubroTitle": "Comida / Repostería 🧁",
+    "problemDescription": "tengo una tienda y tardo horas en atender a los clientes",
+    "timeOrMoneyLost": "2 a 4 horas semanales",
+    "desiredSolution": "",
+    "contact": "",
+    "aiGeneratedPrompt": "Actúa como un asesor experto en Comida / Repostería 🧁. Ayúdame a resolver esta situación específica en Venezuela: \"tengo una tienda y tardo horas en atender a los clientes\". Dame una solución en 3 pasos prácticos, con un formato listo para usar o enviar por WhatsApp y sin complicaciones técnicas.",
+    "tags": [
+      "ventas_redes"
+    ]
+  },
+  {
+    "id": "prob_seed_1",
+    "createdAt": "2026-10-10T14:30:00.000Z",
+    "persona": "comercio",
+    "rubroTitle": "Ventas / Tienda / WhatsApp 🛍️",
+    "problemDescription": "Tardo más de 2 horas diarias revisando capturas de Pago Móvil con el estado de cuenta del banco Venezuela y Banesco para verificar si los clientes realmente transfirieron antes de despachar.",
+    "timeOrMoneyLost": "3 a 6 horas semanales",
+    "contact": "0412-5551234",
+    "aiGeneratedPrompt": "Actúa como auditor administrativo en Venezuela. Tengo esta lista de 5 capturas de Pago Móvil con número de referencia y banco. Crúzalas contra este reporte bancario y dime en una tabla cuáles están 100% liquidadas y cuáles no coinciden.",
+    "status": "oportunidad_saas",
+    "tags": [
+      "finanzas_pagos",
+      "verificacion_pagomovil",
+      "comercio"
+    ]
+  },
+  {
+    "id": "prob_seed_2",
+    "createdAt": "2026-10-11T09:15:00.000Z",
+    "persona": "liceo",
+    "rubroTitle": "Liceo / Colegio / Universidad 🎒",
+    "problemDescription": "En las exposiciones de biología y química me cuesta mucho resumir los temas en las láminas de papel bond y el profesor siempre nos regaña si ponemos mucho texto.",
+    "timeOrMoneyLost": "2 a 4 horas semanales",
+    "contact": "0424-7778899",
+    "aiGeneratedPrompt": "Actúa como tutor escolar. Convierte este tema de 3 páginas sobre el Sistema Nervioso en un esquema para lámina escolar aplicando la regla 6x6: 4 puntos clave de máximo 6 palabras e indica qué dibujo colocar en el centro.",
+    "status": "nuevo",
+    "tags": [
+      "educacion_liceo",
+      "sintesis_laminas",
+      "estudio"
+    ]
+  }
+]

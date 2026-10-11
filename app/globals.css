@@ -1,26 +1,169 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #fbf9f8;
+  --foreground: #1b1c1c;
+  --font-nunito: "Nunito Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-nunito);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  overflow-x: hidden;
+}
+
+/* 3D Tactile Buttons & Elements - Duolingo x Apple Minimalist */
+.btn-3d-green {
+  background-color: #58cc02;
+  border-bottom: 4px solid #46a302;
+  color: #ffffff;
+  transition: all 0.1s ease-in-out;
+}
+.btn-3d-green:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+.btn-3d-green:disabled {
+  background-color: #e5e5e5;
+  border-bottom: 4px solid #afafaf;
+  color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+.btn-3d-blue {
+  background-color: #1cb0f6;
+  border-bottom: 4px solid #1899d6;
+  color: #ffffff;
+  transition: all 0.1s ease-in-out;
+}
+.btn-3d-blue:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+.btn-3d-orange {
+  background-color: #ff9600;
+  border-bottom: 4px solid #cc7800;
+  color: #ffffff;
+  transition: all 0.1s ease-in-out;
+}
+.btn-3d-orange:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+.btn-3d-yellow {
+  background-color: #ffc800;
+  border-bottom: 4px solid #d4a500;
+  color: #1b1c1c;
+  transition: all 0.1s ease-in-out;
+}
+.btn-3d-yellow:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+.btn-3d-white {
+  background-color: #ffffff;
+  border: 2px solid #e5e5e5;
+  border-bottom: 4px solid #e5e5e5;
+  color: #4b4b4b;
+  transition: all 0.1s ease-in-out;
+}
+.btn-3d-white:hover {
+  background-color: #f7f7f7;
+}
+.btn-3d-white:active:not(:disabled) {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.btn-3d-red {
+  background-color: #ff4b4b;
+  border-bottom: 4px solid #d33131;
+  color: #ffffff;
+  transition: all 0.1s ease-in-out;
+}
+.btn-3d-red:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+.btn-3d-purple {
+  background-color: #9333ea;
+  border-bottom: 4px solid #7e22ce;
+  color: #ffffff;
+  transition: all 0.1s ease-in-out;
+}
+.btn-3d-purple:active:not(:disabled) {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+}
+
+/* Tactile 3D Cards */
+.card-tactile {
+  background-color: #ffffff;
+  border: 2px solid #e5e5e5;
+  border-bottom: 4px solid #e5e5e5;
+  border-radius: 1rem;
+  transition: all 0.15s ease-in-out;
+}
+.card-tactile:hover {
+  border-color: #d1d5db;
+}
+
+.card-tactile-selected {
+  background-color: #f0f9ff;
+  border: 2px solid #1cb0f6;
+  border-bottom: 4px solid #1899d6;
+  color: #0369a1;
+}
+
+.card-tactile-correct {
+  background-color: #f0fdf4;
+  border: 2px solid #58cc02;
+  border-bottom: 4px solid #46a302;
+  color: #166534;
+}
+
+.card-tactile-error {
+  background-color: #fef2f2;
+  border: 2px solid #ff4b4b;
+  border-bottom: 4px solid #d33131;
+  color: #991b1b;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Gentle pulse for Turpi speech bubble */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
