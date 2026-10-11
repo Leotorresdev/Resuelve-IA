@@ -87,11 +87,15 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: "/turpi.png", sizes: "32x32" },
-      { url: "/turpi.png", sizes: "192x192" },
-      { url: "/turpi.png", sizes: "512x512" },
+      { url: "/favicon.ico" },
+      { url: "/favicon.png", type: "image/png", sizes: "64x64" },
+      { url: "/icon.png", type: "image/png", sizes: "512x512" },
+      { url: "/turpi.png", type: "image/png", sizes: "512x512" },
     ],
-    apple: [{ url: "/turpi.png", sizes: "180x180" }],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/icon-192.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
