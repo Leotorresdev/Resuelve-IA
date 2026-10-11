@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import os from "os";
 
 export interface ProblemSubmission {
   id: string;
@@ -15,8 +16,13 @@ export interface ProblemSubmission {
   tags: string[];
 }
 
-const DATA_DIR = path.join(process.cwd(), "data");
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const DATA_DIR = IS_VERCEL ? path.join(os.tmpdir(), "resuelveia-data") : path.join(process.cwd(), "data");
 const PROBLEMS_FILE = path.join(DATA_DIR, "problems.json");
+const SEED_FILE = path.join(process.cwd(), "data", "problems.json");
+
+// In-memory fallback
+let inMemoryFallback: ProblemSubmission[] = [];
 
 // Ensure data directory and file exist
 async function ensureDbExists(): Promise<void> {
@@ -25,11 +31,17 @@ async function ensureDbExists(): Promise<void> {
     try {
       await fs.access(PROBLEMS_FILE);
     } catch {
-      // Create with initial seed structure
-      await fs.writeFile(PROBLEMS_FILE, JSON.stringify([], null, 2), "utf-8");
+      let initialData: ProblemSubmission[] = [];
+      try {
+        const seedContent = await fs.readFile(SEED_FILE, "utf-8");
+        initialData = JSON.parse(seedContent);
+      } catch {
+        initialData = [];
+      }
+      await fs.writeFile(PROBLEMS_FILE, JSON.stringify(initialData, null, 2), "utf-8");
     }
   } catch (err) {
-    console.error("Error initializing problems DB:", err);
+    console.warn("Storage notice: Using memory/tmp storage fallback on Vercel:", err);
   }
 }
 
@@ -37,10 +49,13 @@ export async function getAllProblems(): Promise<ProblemSubmission[]> {
   await ensureDbExists();
   try {
     const content = await fs.readFile(PROBLEMS_FILE, "utf-8");
-    return JSON.parse(content) as ProblemSubmission[];
-  } catch (err) {
-    console.error("Error reading problems DB:", err);
-    return [];
+    const parsed = JSON.parse(content) as ProblemSubmission[];
+    // Merge any memory-fallback submissions
+    const ids = new Set(parsed.map((p) => p.id));
+    const extra = inMemoryFallback.filter((p) => !ids.has(p.id));
+    return [...extra, ...parsed];
+  } catch {
+    return inMemoryFallback;
   }
 }
 
@@ -58,7 +73,13 @@ export async function saveProblem(
   };
 
   const updated = [newEntry, ...existing];
-  await fs.writeFile(PROBLEMS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+  inMemoryFallback = updated;
+
+  try {
+    await fs.writeFile(PROBLEMS_FILE, JSON.stringify(updated, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("Could not persist to disk on Vercel lambda, kept in memory store:", err);
+  }
 
   return newEntry;
 }
@@ -74,6 +95,12 @@ export async function updateProblemStatus(
   if (index === -1) return false;
 
   existing[index].status = status;
-  await fs.writeFile(PROBLEMS_FILE, JSON.stringify(existing, null, 2), "utf-8");
+  inMemoryFallback = existing;
+
+  try {
+    await fs.writeFile(PROBLEMS_FILE, JSON.stringify(existing, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("Could not persist update to disk, updated in memory store:", err);
+  }
   return true;
 }
