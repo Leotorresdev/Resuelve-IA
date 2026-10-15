@@ -4,44 +4,84 @@ import { useState, useEffect } from "react";
 
 export type LearningPath = "negocios" | "estudio" | "diario";
 export type UserPersona = "liceo" | "comercio" | "oficio" | "ciudadano";
+export type UserGoal = "trabajo" | "negocios" | "estudio" | "redes";
 
 export interface UserState {
   name: string;
   phoneOrEmail: string;
   isOnboarded: boolean;
+  selectedGoal: UserGoal;
   userPersona: UserPersona;
   experienceLevel: "novato" | "intermedio" | "avanzado";
   dailyGoalMinutes: number;
   streak: number;
   gems: number;
-  hearts: number;
+  batteries: number;
+  maxBatteries: number;
+  hearts: number; // synced alias for batteries
   maxHearts: number;
   xp: number;
   isPro: boolean;
   activePath: LearningPath;
   completedLessons: string[];
+  unlockedPrompts: string[];
   lastActiveDate: string;
+  isAuthRegistered: boolean;
+  hasShownPostLesson1Modal: boolean;
 }
 
 const DEFAULT_STATE: UserState = {
   name: "Estudiante",
   phoneOrEmail: "",
-  isOnboarded: false, // Starts in onboarding like Duolingo!
+  isOnboarded: false,
+  selectedGoal: "trabajo",
   userPersona: "liceo",
   experienceLevel: "novato",
   dailyGoalMinutes: 5,
   streak: 1,
   gems: 100,
+  batteries: 5,
+  maxBatteries: 5,
   hearts: 5,
   maxHearts: 5,
   xp: 0,
   isPro: false,
-  activePath: "estudio",
+  activePath: "negocios",
   completedLessons: [],
+  unlockedPrompts: ["prompt-base-rtcf"],
   lastActiveDate: new Date().toISOString().split("T")[0],
+  isAuthRegistered: false,
+  hasShownPostLesson1Modal: false,
 };
 
-const STORAGE_KEY = "resuelve_ai_state_v2";
+const STORAGE_KEY = "resuelve_ai_state_v3";
+
+function checkDailyRefresh(state: UserState): UserState {
+  const today = new Date().toISOString().split("T")[0];
+  if (!state.lastActiveDate || state.lastActiveDate === today) {
+    return state;
+  }
+
+  // Calculate day difference
+  const lastDate = new Date(state.lastActiveDate);
+  const currDate = new Date(today);
+  const diffTime = currDate.getTime() - lastDate.getTime();
+  const diffDays = Math.round(diffTime / (1000 * 3600 * 24));
+
+  let newStreak = state.streak;
+  if (diffDays > 1) {
+    // Missed more than 1 day
+    newStreak = 1;
+  }
+
+  return {
+    ...state,
+    streak: newStreak,
+    batteries: state.maxBatteries || 5,
+    hearts: state.maxHearts || 5,
+    lastActiveDate: today,
+  };
+}
 
 let globalState: UserState = DEFAULT_STATE;
 const listeners = new Set<(state: UserState) => void>();
@@ -61,9 +101,11 @@ export function useUserStore() {
   const [state, setState] = useState<UserState>(() => {
     if (typeof window !== "undefined") {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY);
+        const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("resuelve_ai_state_v2");
         if (saved) {
-          globalState = { ...DEFAULT_STATE, ...JSON.parse(saved) };
+          const parsed = JSON.parse(saved);
+          const merged = { ...DEFAULT_STATE, ...parsed };
+          globalState = checkDailyRefresh(merged);
           return globalState;
         }
       } catch {
@@ -81,29 +123,35 @@ export function useUserStore() {
   }, []);
 
   const finishOnboarding = (data: {
-    name: string;
-    phoneOrEmail: string;
-    userPersona: UserPersona;
-    experienceLevel: "novato" | "intermedio" | "avanzado";
-    dailyGoalMinutes: number;
+    goal?: UserGoal;
+    userPersona?: UserPersona;
+    name?: string;
+    phoneOrEmail?: string;
+    experienceLevel?: "novato" | "intermedio" | "avanzado";
+    dailyGoalMinutes?: number;
   }) => {
-    let chosenPath: LearningPath = "estudio";
-    if (data.userPersona === "comercio") chosenPath = "negocios";
-    else if (data.userPersona === "oficio" || data.userPersona === "ciudadano")
-      chosenPath = "diario";
+    const goal: UserGoal = data.goal || "trabajo";
+    let chosenPath: LearningPath = "negocios";
+    if (goal === "estudio") chosenPath = "estudio";
+    else if (goal === "trabajo") chosenPath = "diario";
+    else if (goal === "negocios" || goal === "redes") chosenPath = "negocios";
 
     globalState = {
       ...globalState,
-      name: data.name.trim() || "Estudiante",
-      phoneOrEmail: data.phoneOrEmail.trim(),
-      userPersona: data.userPersona,
-      experienceLevel: data.experienceLevel,
-      dailyGoalMinutes: data.dailyGoalMinutes,
+      name: data.name?.trim() || globalState.name || "Estudiante",
+      phoneOrEmail: data.phoneOrEmail?.trim() || "",
+      selectedGoal: goal,
+      userPersona: data.userPersona || (goal === "estudio" ? "liceo" : "comercio"),
+      experienceLevel: data.experienceLevel || "novato",
+      dailyGoalMinutes: data.dailyGoalMinutes || 5,
       activePath: chosenPath,
       isOnboarded: true,
       streak: 1,
-      xp: 25, // First bonus XP earned during micro-trial!
-      gems: 120,
+      xp: Math.max(globalState.xp, 25), // First 25 XP awarded
+      gems: Math.max(globalState.gems, 120),
+      batteries: 5,
+      hearts: 5,
+      lastActiveDate: new Date().toISOString().split("T")[0],
     };
     notify();
   };
@@ -116,34 +164,61 @@ export function useUserStore() {
     notify();
   };
 
-  const completeLesson = (lessonId: string, xpEarned: number, gemsEarned: number) => {
+  const completeLesson = (
+    lessonId: string,
+    xpEarned: number,
+    gemsEarned: number,
+    unlockedPromptId?: string
+  ) => {
     const isNew = !globalState.completedLessons.includes(lessonId);
+    const newCompleted = isNew
+      ? [...globalState.completedLessons, lessonId]
+      : globalState.completedLessons;
+
+    const newUnlocked =
+      unlockedPromptId && !globalState.unlockedPrompts.includes(unlockedPromptId)
+        ? [...globalState.unlockedPrompts, unlockedPromptId]
+        : globalState.unlockedPrompts;
+
     globalState = {
       ...globalState,
       xp: globalState.xp + xpEarned,
       gems: globalState.gems + (isNew ? gemsEarned : Math.floor(gemsEarned / 2)),
-      completedLessons: isNew
-        ? [...globalState.completedLessons, lessonId]
-        : globalState.completedLessons,
+      completedLessons: newCompleted,
+      unlockedPrompts: newUnlocked,
+      lastActiveDate: new Date().toISOString().split("T")[0],
     };
     notify();
   };
 
-  const loseHeart = () => {
-    if (globalState.isPro) return;
+  const consumeBattery = (): boolean => {
+    if (globalState.isPro) return true;
+    if (globalState.batteries <= 0) return false;
+    const nextBatteries = Math.max(0, globalState.batteries - 1);
     globalState = {
       ...globalState,
-      hearts: Math.max(0, globalState.hearts - 1),
+      batteries: nextBatteries,
+      hearts: nextBatteries,
+    };
+    notify();
+    return true;
+  };
+
+  const loseHeart = () => {
+    consumeBattery();
+  };
+
+  const refillBatteries = () => {
+    globalState = {
+      ...globalState,
+      batteries: globalState.maxBatteries,
+      hearts: globalState.maxHearts,
     };
     notify();
   };
 
   const refillHearts = () => {
-    globalState = {
-      ...globalState,
-      hearts: globalState.maxHearts,
-    };
-    notify();
+    refillBatteries();
   };
 
   const buyHeartsWithGems = () => {
@@ -151,6 +226,7 @@ export function useUserStore() {
       globalState = {
         ...globalState,
         gems: globalState.gems - 50,
+        batteries: globalState.maxBatteries,
         hearts: globalState.maxHearts,
       };
       notify();
@@ -163,8 +239,39 @@ export function useUserStore() {
     globalState = {
       ...globalState,
       isPro: true,
+      batteries: 999,
+      maxBatteries: 999,
       hearts: 999,
       maxHearts: 999,
+    };
+    notify();
+  };
+
+  const unlockPrompt = (promptId: string) => {
+    if (!globalState.unlockedPrompts.includes(promptId)) {
+      globalState = {
+        ...globalState,
+        unlockedPrompts: [...globalState.unlockedPrompts, promptId],
+      };
+      notify();
+    }
+  };
+
+  const saveUserAccount = (data: { name: string; emailOrPhone: string }) => {
+    globalState = {
+      ...globalState,
+      name: data.name.trim() || globalState.name,
+      phoneOrEmail: data.emailOrPhone.trim(),
+      isAuthRegistered: true,
+      hasShownPostLesson1Modal: true,
+    };
+    notify();
+  };
+
+  const setHasShownPostLesson1Modal = (shown: boolean) => {
+    globalState = {
+      ...globalState,
+      hasShownPostLesson1Modal: shown,
     };
     notify();
   };
@@ -182,10 +289,15 @@ export function useUserStore() {
     finishOnboarding,
     resetOnboarding,
     completeLesson,
+    consumeBattery,
     loseHeart,
+    refillBatteries,
     refillHearts,
     buyHeartsWithGems,
     upgradeToPro,
+    unlockPrompt,
+    saveUserAccount,
+    setHasShownPostLesson1Modal,
     setActivePath,
   };
 }

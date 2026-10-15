@@ -20,26 +20,26 @@ const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://resuelveia.com";
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Resuelve AI • Aprende Inteligencia Artificial en 3 Minutos al Día 🇻🇪",
-    template: "%s | Resuelve AI",
+    default: "Resuelve IA • Domina la Inteligencia Artificial en 3 Minutos al Día 🇻🇪",
+    template: "%s | Resuelve IA",
   },
   description:
-    "La micro-app gamificada de Venezuela para dominar la Inteligencia Artificial. Aprende a hablarle a ChatGPT y Gemini con lecciones prácticas estilo Duolingo para ventas por WhatsApp, tareas de liceo y trámites cotidianos.",
+    "Aprende ingeniería de prompts y cómo hablarle a ChatGPT y Gemini con micro-lecciones interactivas estilo Duolingo. Diseñado para ahorrar tiempo en tu trabajo, vender más en tu negocio y estudiar sin estrés.",
   keywords: [
-    "aprender inteligencia artificial venezuela",
-    "como usar chatgpt para tareas de liceo",
-    "ingenieria de prompts para principiantes",
-    "prompts para vender por whatsapp venezuela",
-    "gemini ia gratis venezuela",
-    "resuelve ai",
-    "turpi inteligencia artificial",
-    "pago movil bcv ia",
-    "curso inteligencia artificial venezuela",
+    "aprender inteligencia artificial",
+    "ingenieria de prompts",
     "duolingo de inteligencia artificial",
+    "como hablarle a chatgpt",
+    "gemini ia gratis",
+    "prompts para vender por whatsapp",
+    "resuelve ia",
+    "turpi inteligencia artificial",
+    "ia para estudiantes",
+    "ia para negocios",
   ],
-  authors: [{ name: "Resuelve AI", url: baseUrl }],
-  creator: "Resuelve AI",
-  publisher: "Academia Resuelve AI",
+  authors: [{ name: "Resuelve IA", url: baseUrl }],
+  creator: "Resuelve IA",
+  publisher: "Academia Resuelve IA",
   formatDetection: {
     email: false,
     address: false,
@@ -49,17 +49,23 @@ export const metadata: Metadata = {
     canonical: baseUrl,
   },
   openGraph: {
-    title: "Resuelve AI • Aprende Inteligencia Artificial en 3 Minutos al Día 🇻🇪",
+    title: "Resuelve IA • Domina la Inteligencia Artificial en 3 Minutos al Día 🇻🇪",
     description:
-      "Aprende a hablarle a la IA con micro-lecciones interactivas. Ideal para comerciantes, estudiantes de liceo y profesionales en Venezuela.",
+      "Micro-lecciones estilo Duolingo con Turpi para aprender prompts profesionales de IA. Vende más, ahorra horas de trabajo y estudia más rápido.",
     url: baseUrl,
-    siteName: "Resuelve AI",
+    siteName: "Resuelve IA",
     images: [
       {
         url: "/turpi.png",
         width: 512,
         height: 512,
-        alt: "Turpi - Mascota Oficial de Resuelve AI Venezuela",
+        alt: "Turpi - Mascota Oficial de Resuelve IA",
+      },
+      {
+        url: "/flyer.jpg",
+        width: 1080,
+        height: 1920,
+        alt: "Resuelve IA - Aprende IA jugando",
       },
     ],
     locale: "es_VE",
@@ -67,9 +73,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Resuelve AI • Aprende Inteligencia Artificial en 3 Minutos al Día",
+    title: "Resuelve IA • Domina la IA en 3 Minutos al Día 🇻🇪",
     description:
-      "La app estilo Duolingo adaptada a Venezuela para dominar la IA sin palabras raras.",
+      "Aprende a hablarle a la IA con micro-lecciones estilo Duolingo con Turpi. 100% práctico y sin tecnicismos.",
     images: ["/turpi.png"],
     creator: "@resuelveia",
   },
@@ -85,6 +91,11 @@ export const metadata: Metadata = {
     },
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Resuelve IA",
+  },
   icons: {
     icon: [
       { url: "/favicon.ico" },
@@ -104,6 +115,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
   themeColor: "#58cc02",
 };
 

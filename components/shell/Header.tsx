@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Flame, Gem, Heart, Sparkles, ChevronDown, Volume2, VolumeX } from "lucide-react";
-import { useUserStore, LearningPath } from "@/lib/store";
+import { Flame, Zap, Battery, BatteryCharging, ChevronDown, Volume2, VolumeX } from "lucide-react";
+import { useUserStore } from "@/lib/store";
 import { PATHS } from "@/lib/data/lessonsData";
 import { sounds } from "@/lib/soundEffects";
 
@@ -29,7 +29,7 @@ export default function Header({ onOpenStore, onOpenPathSelector }: HeaderProps)
           <div className="relative w-9 h-9 rounded-full overflow-hidden border-2 border-[#58cc02] shadow-xs flex-shrink-0 bg-amber-50">
             <Image
               src="/turpi.png"
-              alt="Turpi - Resuelve AI"
+              alt="Turpi - Resuelve IA"
               fill
               className="object-cover"
               priority
@@ -38,7 +38,7 @@ export default function Header({ onOpenStore, onOpenPathSelector }: HeaderProps)
           <div>
             <div className="flex items-center gap-1">
               <span className="font-extrabold text-[17px] tracking-tight text-[#1b1c1c] leading-none">
-                Resuelve<span className="text-[#58cc02]">AI</span>
+                Resuelve<span className="text-[#58cc02]">IA</span>
               </span>
               {store.isPro && (
                 <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[10px] font-black px-1.5 py-0.2 rounded-md uppercase tracking-wider">
@@ -56,46 +56,50 @@ export default function Header({ onOpenStore, onOpenPathSelector }: HeaderProps)
           </div>
         </div>
 
-        {/* Telemetry Stats: Streak, Gems, Hearts */}
-        <div className="flex items-center gap-2 text-xs font-black">
+        {/* Telemetry Stats: Racha 🔥, XP ⚡, Baterías 🔋 */}
+        <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-black">
           {/* Streak Flame */}
           <div
-            title="Días de racha consecutiva"
-            className="flex items-center gap-1 bg-amber-50 border border-amber-200/80 text-[#ff9600] px-2.5 py-1 rounded-full shadow-2xs"
+            title="Días de racha consecutiva activa"
+            className="flex items-center gap-1 bg-amber-50 border border-amber-200 text-[#ff9600] px-2.5 py-1 rounded-full shadow-2xs"
           >
             <Flame className="w-4 h-4 fill-[#ff9600] text-[#ff9600] animate-pulse" />
             <span>{store.streak}</span>
           </div>
 
-          {/* AI Gems */}
+          {/* XP ⚡ */}
           <div
-            title="Gemas AI acumuladas"
-            className="flex items-center gap-1 bg-sky-50 border border-sky-200/80 text-[#1cb0f6] px-2.5 py-1 rounded-full shadow-2xs"
+            title="Puntos de Experiencia acumulados"
+            className="flex items-center gap-1 bg-sky-50 border border-sky-200 text-[#1cb0f6] px-2.5 py-1 rounded-full shadow-2xs"
           >
-            <Gem className="w-3.5 h-3.5 fill-[#1cb0f6] text-[#1cb0f6]" />
-            <span>{store.gems}</span>
+            <Zap className="w-3.5 h-3.5 fill-[#1cb0f6] text-[#1cb0f6]" />
+            <span>{store.xp}</span>
           </div>
 
-          {/* Hearts / Lives */}
+          {/* Baterías 🔋 */}
           <button
             onClick={onOpenStore}
-            title={store.isPro ? "Vidas infinitas activas" : "Vidas restantes. Toca para recargar."}
+            title={store.isPro ? "Baterías infinitas activas" : "Baterías restantes. Toca para recargar."}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-full border shadow-2xs transition-transform active:scale-95 ${
               store.isPro
                 ? "bg-emerald-50 border-emerald-200 text-[#58cc02]"
-                : store.hearts <= 1
+                : (store.batteries ?? 5) <= 1
                 ? "bg-rose-50 border-rose-300 text-[#ff4b4b] animate-bounce"
-                : "bg-rose-50 border-rose-200 text-[#ff4b4b]"
+                : "bg-emerald-50 border-emerald-200 text-[#58cc02]"
             }`}
           >
-            <Heart className={`w-3.5 h-3.5 fill-current ${store.hearts <= 1 ? "animate-ping" : ""}`} />
-            <span>{store.isPro ? "∞" : store.hearts}</span>
+            {store.isPro ? (
+              <BatteryCharging className="w-4 h-4 text-[#58cc02]" />
+            ) : (
+              <Battery className="w-4 h-4 fill-current" />
+            )}
+            <span>{store.isPro ? "∞" : store.batteries ?? 5}</span>
           </button>
 
           {/* Sound Effects Mute Toggle */}
           <button
             onClick={() => setMuted(sounds.toggleMute())}
-            title={muted ? "Activar efectos de sonido" : "Silenciar efectos de sonido"}
+            title={muted ? "Activar audio" : "Silenciar audio"}
             className="p-1.5 rounded-full text-[#777777] hover:text-[#1b1c1c] hover:bg-neutral-100 transition-colors"
           >
             {muted ? (

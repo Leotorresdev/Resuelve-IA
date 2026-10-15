@@ -13,6 +13,7 @@ import StoreTab from "@/components/tabs/StoreTab";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import SeoContent from "@/components/seo/SeoContent";
 import ProblemRadarModal from "@/components/radar/ProblemRadarModal";
+import SoftAuthModal from "@/components/auth/SoftAuthModal";
 import { Lesson } from "@/lib/data/lessonsData";
 import { useUserStore } from "@/lib/store";
 
@@ -23,23 +24,25 @@ export default function Home() {
   const [activeLesson, setActiveLesson] = useState<Lesson | null>(null);
   const [isPathSelectorOpen, setIsPathSelectorOpen] = useState(false);
   const [isRadarOpen, setIsRadarOpen] = useState(false);
+  const [isSoftAuthOpen, setIsSoftAuthOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-[#fbf9f8] flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-4 border-[#58cc02] border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  // If user hasn't completed the Duolingo onboarding steps, show onboarding flow!
-  if (!store.isOnboarded) {
-    return <OnboardingFlow onComplete={() => setCurrentTab("learn")} />;
-  }
+  const handleCloseLesson = () => {
+    setActiveLesson(null);
+    // Soft registration wall after lesson 1 if user hasn't registered yet
+    if (
+      store.completedLessons.length >= 1 &&
+      !store.isAuthRegistered &&
+      !store.hasShownPostLesson1Modal
+    ) {
+      setTimeout(() => {
+        setIsSoftAuthOpen(true);
+      }, 500);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#fbf9f8] flex flex-col justify-between selection:bg-[#58cc02]/20">
@@ -82,7 +85,7 @@ export default function Home() {
       {activeLesson && (
         <LessonModal
           lesson={activeLesson}
-          onClose={() => setActiveLesson(null)}
+          onClose={handleCloseLesson}
         />
       )}
 
@@ -97,6 +100,17 @@ export default function Home() {
         isOpen={isRadarOpen}
         onClose={() => setIsRadarOpen(false)}
       />
+
+      {/* Soft Auth Modal (Post Lesson 1) */}
+      <SoftAuthModal
+        isOpen={isSoftAuthOpen}
+        onClose={() => setIsSoftAuthOpen(false)}
+      />
+
+      {/* First-time Onboarding Flow Overlay (Value Before Signup) */}
+      {mounted && !store.isOnboarded && (
+        <OnboardingFlow onComplete={() => setCurrentTab("learn")} />
+      )}
     </div>
   );
 }
