@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Bounty, BountyCategory, WalletTransaction, SEED_BOUNTIES } from "@/lib/data/bountiesData";
 
 export type LearningPath = "negocios" | "estudio" | "diario";
 export type UserPersona = "liceo" | "comercio" | "oficio" | "ciudadano";
@@ -28,6 +29,14 @@ export interface UserState {
   lastActiveDate: string;
   isAuthRegistered: boolean;
   hasShownPostLesson1Modal: boolean;
+  // Billetera & Misiones
+  tokenBalance: number; // 1 Token = $1.00 USD para publicar tareas
+  earningsUsd: number; // Saldo ganado por resolver ($0.30/tarea)
+  platformRevenueUsd: number; // Comisión acumulada de Resuelve IA ($0.70/tarea)
+  bounties: Bounty[];
+  myPostedBountyIds: string[];
+  mySolvedBountyIds: string[];
+  transactions: WalletTransaction[];
 }
 
 const DEFAULT_STATE: UserState = {
@@ -52,9 +61,27 @@ const DEFAULT_STATE: UserState = {
   lastActiveDate: new Date().toISOString().split("T")[0],
   isAuthRegistered: false,
   hasShownPostLesson1Modal: false,
+  // Billetera inicial: 2 tokens de cortesía para pruebas inmediatas
+  tokenBalance: 2,
+  earningsUsd: 0.0,
+  platformRevenueUsd: 0.0,
+  bounties: SEED_BOUNTIES,
+  myPostedBountyIds: [],
+  mySolvedBountyIds: [],
+  transactions: [
+    {
+      id: "tx-welcome-tokens",
+      type: "token_purchase",
+      amountTokens: 2,
+      amountUsd: 2.0,
+      description: "Tokens de bienvenida para publicar tu primer trabajo 🎓",
+      date: new Date().toISOString(),
+      status: "completed",
+    },
+  ],
 };
 
-const STORAGE_KEY = "resuelve_ai_state_v3";
+const STORAGE_KEY = "resuelve_ai_state_v4";
 
 function checkDailyRefresh(state: UserState): UserState {
   const today = new Date().toISOString().split("T")[0];
@@ -284,6 +311,186 @@ export function useUserStore() {
     notify();
   };
 
+  // Wallet & Tokens Actions
+  const addTokens = (amount: number, description: string = "Compra de Tokens", paymentTxId?: string) => {
+    const tx: WalletTransaction = {
+      id: paymentTxId || `tx_${Date.now()}`,
+      type: "token_purchase",
+      amountTokens: amount,
+      amountUsd: amount,
+      description,
+      date: new Date().toISOString(),
+      status: "completed",
+    };
+    globalState = {
+      ...globalState,
+      tokenBalance: (globalState.tokenBalance || 0) + amount,
+      transactions: [tx, ...(globalState.transactions || [])],
+    };
+    notify();
+  };
+
+  const postBounty = (data: {
+    title: string;
+    category: BountyCategory;
+    categoryLabel?: string;
+    description: string;
+    requirements: string[];
+    expectedFormat: string;
+    authorName?: string;
+    authorRole?: string;
+    paymentMethod: "token" | "card";
+  }): { success: boolean; bountyId: string } => {
+    const newId = `bounty_${Date.now()}`;
+    const categoryLabels: Record<BountyCategory, string> = {
+      liceo: "🎓 Liceo / Bachillerato",
+      universidad: "🏛️ Universidad",
+      trabajo: "💼 Trabajo / Oficina",
+      negocio: "🚀 Negocio / Ventas",
+    };
+
+    const newBounty: Bounty = {
+      id: newId,
+      title: data.title.trim(),
+      category: data.category,
+      categoryLabel: data.categoryLabel || categoryLabels[data.category] || "Tarea",
+      authorName: data.authorName?.trim() || globalState.name || "Tú (Estudiante)",
+      authorRole: data.authorRole?.trim() || "Estudiante",
+      description: data.description.trim(),
+      requirements: data.requirements,
+      expectedFormat: data.expectedFormat,
+      rewardUsd: 0.30,
+      priceUsd: 1.00,
+      platformFeeUsd: 0.70,
+      status: "open",
+      createdAt: new Date().toISOString(),
+    };
+
+    const tx: WalletTransaction = {
+      id: `tx_post_${Date.now()}`,
+      type: data.paymentMethod === "card" ? "direct_payment" : "task_posted",
+      amountTokens: data.paymentMethod === "token" ? 1 : 0,
+      amountUsd: 1.00,
+      description: `Publicación de tarea: "${data.title.substring(0, 32)}..."`,
+      date: new Date().toISOString(),
+      status: "completed",
+    };
+
+    const nextTokens = data.paymentMethod === "token"
+      ? Math.max(0, (globalState.tokenBalance || 0) - 1)
+      : (globalState.tokenBalance || 0);
+
+    globalState = {
+      ...globalState,
+      tokenBalance: nextTokens,
+      bounties: [newBounty, ...(globalState.bounties || [])],
+      myPostedBountyIds: [newId, ...(globalState.myPostedBountyIds || [])],
+      transactions: [tx, ...(globalState.transactions || [])],
+    };
+    notify();
+
+    return { success: true, bountyId: newId };
+  };
+
+  const completeBountySolve = (
+    bountyId: string,
+    solverPrompt: string,
+    deliverable: string,
+    score: number
+  ): { success: boolean; rewardUsd: number; xp: number } => {
+    const rewardUsd = 0.30;
+    const platformFeeUsd = 0.70;
+    const xpReward = 50;
+
+    const updatedBounties = (globalState.bounties || []).map((b) => {
+      if (b.id === bountyId) {
+        return {
+          ...b,
+          status: "solved" as const,
+          solverPrompt,
+          generatedDeliverable: deliverable,
+          solvedAt: new Date().toISOString(),
+          solverName: globalState.name || "Solucionador Pro",
+          score,
+        };
+      }
+      return b;
+    });
+
+    const earningTx: WalletTransaction = {
+      id: `tx_earn_${Date.now()}`,
+      type: "task_solved_earning",
+      amountUsd: rewardUsd,
+      description: `Recompensa por resolver tarea: +$0.30 USD (+50 XP)`,
+      date: new Date().toISOString(),
+      status: "completed",
+    };
+
+    globalState = {
+      ...globalState,
+      bounties: updatedBounties,
+      earningsUsd: Number(((globalState.earningsUsd || 0) + rewardUsd).toFixed(2)),
+      platformRevenueUsd: Number(((globalState.platformRevenueUsd || 0) + platformFeeUsd).toFixed(2)),
+      xp: (globalState.xp || 0) + xpReward,
+      mySolvedBountyIds: [bountyId, ...(globalState.mySolvedBountyIds || [])],
+      transactions: [earningTx, ...(globalState.transactions || [])],
+    };
+    notify();
+
+    return { success: true, rewardUsd, xp: xpReward };
+  };
+
+  const redeemEarnings = (
+    amountUsd: number,
+    method: "tokens" | "payout",
+    destination?: string
+  ): { success: boolean; message: string } => {
+    if ((globalState.earningsUsd || 0) < amountUsd) {
+      return { success: false, message: "Saldo insuficiente para esta operación." };
+    }
+
+    if (method === "tokens") {
+      const tokensToAdd = Math.floor(amountUsd);
+      const nextEarnings = Number(((globalState.earningsUsd || 0) - tokensToAdd).toFixed(2));
+      const tx: WalletTransaction = {
+        id: `tx_redeem_${Date.now()}`,
+        type: "token_purchase",
+        amountTokens: tokensToAdd,
+        amountUsd: tokensToAdd,
+        description: `Canje de ganancias a Tokens (${tokensToAdd} Tokens)`,
+        date: new Date().toISOString(),
+        status: "completed",
+      };
+
+      globalState = {
+        ...globalState,
+        earningsUsd: nextEarnings,
+        tokenBalance: (globalState.tokenBalance || 0) + tokensToAdd,
+        transactions: [tx, ...(globalState.transactions || [])],
+      };
+      notify();
+      return { success: true, message: `¡Canjeaste exitosamente $${tokensToAdd} USD por ${tokensToAdd} Tokens!` };
+    } else {
+      const nextEarnings = Number(((globalState.earningsUsd || 0) - amountUsd).toFixed(2));
+      const tx: WalletTransaction = {
+        id: `tx_payout_${Date.now()}`,
+        type: "payout_request",
+        amountUsd: amountUsd,
+        description: `Solicitud de retiro a ${destination || "cuenta bancaria / billetera"}`,
+        date: new Date().toISOString(),
+        status: "pending",
+      };
+
+      globalState = {
+        ...globalState,
+        earningsUsd: nextEarnings,
+        transactions: [tx, ...(globalState.transactions || [])],
+      };
+      notify();
+      return { success: true, message: `¡Solicitud de retiro por $${amountUsd.toFixed(2)} USD enviada! Procesando en 24 horas.` };
+    }
+  };
+
   return {
     ...state,
     finishOnboarding,
@@ -299,5 +506,9 @@ export function useUserStore() {
     saveUserAccount,
     setHasShownPostLesson1Modal,
     setActivePath,
+    addTokens,
+    postBounty,
+    completeBountySolve,
+    redeemEarnings,
   };
 }

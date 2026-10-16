@@ -10,9 +10,10 @@ import { sounds } from "@/lib/soundEffects";
 interface HeaderProps {
   onOpenStore: () => void;
   onOpenPathSelector: () => void;
+  onOpenWallet?: () => void;
 }
 
-export default function Header({ onOpenStore, onOpenPathSelector }: HeaderProps) {
+export default function Header({ onOpenStore, onOpenPathSelector, onOpenWallet }: HeaderProps) {
   const store = useUserStore();
   const currentPath = PATHS.find((p) => p.id === store.activePath) || PATHS[0];
   const [muted, setMuted] = useState(false);
@@ -94,6 +95,18 @@ export default function Header({ onOpenStore, onOpenPathSelector }: HeaderProps)
               <Battery className="w-4 h-4 fill-current" />
             )}
             <span>{store.isPro ? "∞" : store.batteries ?? 5}</span>
+          </button>
+
+          {/* Billetera (Tokens + USD) 🪙 */}
+          <button
+            onClick={onOpenWallet}
+            title="Billetera Resuelve IA: Tokens para publicar y saldo ganado en USD"
+            className="flex items-center gap-1 bg-amber-50/90 border border-amber-300 text-amber-900 px-2 sm:px-2.5 py-1 rounded-full shadow-2xs transition-transform active:scale-95 cursor-pointer hover:bg-amber-100"
+          >
+            <span className="text-xs">🪙</span>
+            <span className="text-[11px] font-black">{store.tokenBalance}</span>
+            <span className="text-amber-300">|</span>
+            <span className="text-[11px] font-black text-emerald-700">${store.earningsUsd.toFixed(2)}</span>
           </button>
 
           {/* Sound Effects Mute Toggle */}

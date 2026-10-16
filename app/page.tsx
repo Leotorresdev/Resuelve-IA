@@ -14,6 +14,8 @@ import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import SeoContent from "@/components/seo/SeoContent";
 import ProblemRadarModal from "@/components/radar/ProblemRadarModal";
 import SoftAuthModal from "@/components/auth/SoftAuthModal";
+import BountiesTab from "@/components/tabs/BountiesTab";
+import WalletModal from "@/components/wallet/WalletModal";
 import { Lesson } from "@/lib/data/lessonsData";
 import { useUserStore } from "@/lib/store";
 
@@ -25,6 +27,7 @@ export default function Home() {
   const [isPathSelectorOpen, setIsPathSelectorOpen] = useState(false);
   const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [isSoftAuthOpen, setIsSoftAuthOpen] = useState(false);
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -50,6 +53,7 @@ export default function Home() {
       <Header
         onOpenStore={() => setCurrentTab("store")}
         onOpenPathSelector={() => setIsPathSelectorOpen(true)}
+        onOpenWallet={() => setIsWalletOpen(true)}
       />
 
       {/* Main Tab Router */}
@@ -63,6 +67,10 @@ export default function Home() {
 
         {currentTab === "arena" && (
           <ArenaTab onStartLesson={(lesson) => setActiveLesson(lesson)} />
+        )}
+
+        {currentTab === "bounties" && (
+          <BountiesTab onOpenWallet={() => setIsWalletOpen(true)} />
         )}
 
         {currentTab === "lab" && <LabTab />}
@@ -105,6 +113,12 @@ export default function Home() {
       <SoftAuthModal
         isOpen={isSoftAuthOpen}
         onClose={() => setIsSoftAuthOpen(false)}
+      />
+
+      {/* Wallet & Checkout Modal (Dual Balances, Visa/Mastercard, Earnings) */}
+      <WalletModal
+        isOpen={isWalletOpen}
+        onClose={() => setIsWalletOpen(false)}
       />
 
       {/* First-time Onboarding Flow Overlay (Value Before Signup) */}

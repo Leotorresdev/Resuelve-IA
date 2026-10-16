@@ -1,8 +1,8 @@
 "use client";
 
-import { Map, Swords, FlaskConical, Award, ShoppingBag } from "lucide-react";
+import { Map, Swords, Coins, FlaskConical, Award, ShoppingBag } from "lucide-react";
 
-export type NavTab = "learn" | "arena" | "lab" | "profile" | "store";
+export type NavTab = "learn" | "arena" | "bounties" | "lab" | "profile" | "store";
 
 interface BottomNavProps {
   currentTab: NavTab;
@@ -13,6 +13,7 @@ export default function BottomNav({ currentTab, onSelectTab }: BottomNavProps) {
   const tabs = [
     { id: "learn" as const, label: "Aprender", icon: Map },
     { id: "arena" as const, label: "Retos", icon: Swords },
+    { id: "bounties" as const, label: "Misiones", icon: Coins },
     { id: "lab" as const, label: "Laboratorio", icon: FlaskConical },
     { id: "profile" as const, label: "Perfil", icon: Award },
     { id: "store" as const, label: "Tienda", icon: ShoppingBag },
@@ -29,7 +30,7 @@ export default function BottomNav({ currentTab, onSelectTab }: BottomNavProps) {
             <button
               key={tab.id}
               onClick={() => onSelectTab(tab.id)}
-              className={`flex flex-col items-center justify-center py-1.5 px-3 rounded-xl transition-all select-none ${
+              className={`flex flex-col items-center justify-center py-1 px-1 sm:px-2.5 rounded-xl transition-all select-none ${
                 isActive
                   ? "text-[#58cc02]"
                   : "text-[#777777] hover:text-[#1b1c1c] active:scale-95"
@@ -41,13 +42,13 @@ export default function BottomNav({ currentTab, onSelectTab }: BottomNavProps) {
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 transition-transform ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 transition-transform ${
                     isActive ? "stroke-[2.5px]" : "stroke-[2px]"
                   }`}
                 />
               </div>
               <span
-                className={`text-[11px] font-black uppercase tracking-wider mt-0.5 ${
+                className={`text-[9.5px] sm:text-[10.5px] font-black uppercase tracking-tight mt-0.5 ${
                   isActive ? "text-[#58cc02]" : "text-[#777777]"
                 }`}
               >
